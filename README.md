@@ -1,6 +1,6 @@
 # 2024 US Election Prediction
 # For Peer reviewers:
-# The paper2.pdf include my paper overall frame and graphs, ALL words in this paper draft is now randomly generated with no relate to my predictions and words, I will change them after the initial submission. Please tell me about what else should I need in my graphs and analysis, and what more points should be added to my paper's overall frame.
+# The paper2.pdf include my paper overall frame and graphs, ALL words in this paper draft is now randomly generated with no relate to my predictions and words, I will change them after the initial submission. Please tell me about what else should I need in my graphs and analysis, and what more points should be added to my paper's overall frame. Thank you!
 
 
 ## Overview
