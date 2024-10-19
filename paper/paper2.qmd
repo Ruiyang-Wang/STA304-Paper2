@@ -1,0 +1,304 @@
+---
+title: "2024 USA Election Prediction"
+author: 
+  - Ruiyang Wang
+thanks: "Code and data are available at: [https://github.com/Ruiyang-Wang/STA304-Paper2.git)."
+date: today
+date-format: long
+abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
+format: pdf
+number-sections: true
+bibliography: references.bib
+---
+
+```{r}
+#| include: false
+#| warning: false
+#| message: false
+
+install.packages("knitr")
+install.packages("kableExtra")
+install.packages("readr")
+# Load necessary libraries
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(knitr)
+library(kableExtra)
+library(MASS)
+```
+
+
+# Introduction
+
+The 2024 U.S. Presidential election is approaching, and understanding the factors that influence polling results is crucial for predicting the election outcome. This paper uses polling data to predict the support percentages for the top 5 candidates leading up to November 5th, 2024. We first explore the relationship between sample size and support percentage using simple linear regression (SLR). We then employ multiple linear regression (MLR) to model the influence of various polling factors and culminate in a prediction graph for each candidate's support. Our goal is to provide an evidence-based prediction of the likely election result.
+
+## Estimand
+
+Our primary estimand is the predicted support percentage for each candidate based on polling data. We aim to quantify how polling factors such as sample size, poll scores, and transparency scores affect the predicted support percentage.
+
+## Structure of the Paper
+
+The remainder of this paper is structured as follows: 
+- Section @sec-data describes the dataset and key variables.
+- Section @sec-slr presents the simple linear regression (SLR) model used to explore the effect of sample size on support percentage.
+- Section @sec-mlr presents the multiple linear regression (MLR) model used for predictions.
+- Section @sec-prediction provides the key predictions leading up to the election.
+
+# Data {#sec-data}
+
+## Overview
+
+The data used for this analysis includes polling results for the top 5 candidates in the 2024 U.S. Presidential election. Key variables include:
+- **Sample Size**: The number of respondents in each poll.
+- **Support Percentage (pct)**: The percentage of respondents supporting a particular candidate.
+- **Poll Score**: A measure of the reliability of the pollster.
+- **Transparency Score**: An indicator of how transparent the pollster is about their polling methods.
+
+## Measurement
+
+Each polling result is recorded with the above variables, allowing us to investigate the relationship between polling factors and the support percentage of each candidate. This analysis focuses on the top 5 most frequently polled candidates.
+
+## Outcome Variables
+
+Our primary outcome variable is **support percentage (pct)**, which represents the percentage of respondents who support each candidate. This variable is modeled as the dependent variable in both the SLR and MLR analyses.
+
+Some of our data is from @US2024
+
+```{r}
+#| include: false
+#| warning: false
+#| message: false
+data <- read_csv("~/STA304 Paper2/data/02-analysis_data/analysis_data_relevant_full.csv")
+tibble(data)
+```
+
+# Simple Linear Regression (SLR): Verification of Sample Size Effect {#sec-slr}
+
+## Overview
+
+In this section, we verify whether sample size has a significant impact on the support percentage of the candidates. Simple linear regression (SLR) is used to examine the relationship between the sample size and the percentage of support for each of the top 5 candidates.
+
+## Model Overview
+
+In the SLR model, the **dependent variable** is the support percentage (pct), and the **independent variable** is the sample size. A log-transformation is applied to the sample size to account for its wide range across different polls.
+
+## Model Overview
+```{r}
+#| echo: false
+# Filter data to include only the top 5 candidates
+top_5_answers <- data %>%
+  count(answer, sort = TRUE) %>%
+  top_n(5, n) %>%
+  pull(answer)
+filtered_data <- data %>%
+  filter(answer %in% top_5_answers)
+# Perform Log transformation for each candidate
+for (candidate in unique(filtered_data$answer)) {
+  # Filter data for the current candidate
+  candidate_data <- filtered_data %>% filter(answer == candidate)
+  
+  # Apply log transformation to sample_size (adding 1 to avoid log(0))
+  candidate_data$log_sample_size <- log(candidate_data$sample_size + 1)
+  
+  # Fit the simple linear regression model (pct ~ log(sample_size))
+  log_model <- lm(pct ~ log_sample_size, data = candidate_data)
+  
+  # Plot the regression line for log(Sample Size) vs pct
+  p <- ggplot(candidate_data, aes(x = log_sample_size, y = pct)) +
+    geom_point() +
+    geom_smooth(method = "lm", se = FALSE, color = "blue") +
+    labs(title = paste("Log Transformed SLR for", candidate, "- Log(Sample Size) vs pct"),
+         x = "Log(Sample Size)", y = "Support Percentage (%)") +
+    theme_minimal() +
+    theme(plot.title = element_text(hjust = 0.5))  # Center the title
+  
+  # Print the plot
+  print(p)
+}
+```
+In the SLR model, the **dependent variable** is the support percentage (pct), and the **independent variable** is the sample size. A log-transformation is applied to the sample size to account for its wide range across different polls.
+
+## Result
+```{r}
+#| echo: false
+# Initialize a data frame to store R-squared values
+r_squared_comparison <- data.frame(
+  candidate = character(),
+  variable = character(),
+  r_squared = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Perform SLR with 'sample_size' for each candidate
+for (candidate in unique(filtered_data$answer)) {
+  # Filter data for the current candidate
+  candidate_data <- filtered_data %>% filter(answer == candidate)
+  
+  #### SLR with sample_size ####
+  sample_size_model <- lm(pct ~ sample_size, data = candidate_data)
+  
+  # Store R-squared value for sample_size
+  r_squared_comparison <- r_squared_comparison %>%
+    add_row(candidate = candidate, variable = "sample_size", r_squared = summary(sample_size_model)$r.squared)
+}
+
+# Plot comparison of R-squared values (sample_size only)
+ggplot(r_squared_comparison, aes(x = candidate, y = r_squared, fill = candidate)) +
+  geom_bar(stat = "identity") +
+  labs(title = "R-squared Values for Sample Size (Top 5 Candidates)", 
+       x = "Candidate", 
+       y = "R-squared Value") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))  # Center the title
+```
+
+For each candidate, we analyze whether sample size significantly influences their support percentage. The results will guide us in assessing whether sample size should be further considered in the multiple linear regression (MLR) models.
+
+# Multiple Linear Regression (MLR): Predicting Support Percentages {#sec-mlr}
+
+## Overview
+
+After examining the effect of sample size on support percentage through SLR, we now introduce the multiple linear regression (MLR) model. This model incorporates additional variables, such as poll score and transparency score, to predict the support percentage for each candidate.
+
+## Model Overview & Residual Analysis
+
+The MLR model includes:
+- **Dependent Variable**: Support Percentage (sqrt-transformed)
+- **Independent Variables**: Poll Score, Log-transformed Sample Size, and Transparency Score.
+
+The residual analysis is used to evaluate the model's fit, helping us assess the quality of the predictions.
+
+```{r}
+#| echo: false
+# Load the candidate models
+candidate_models <- readRDS("~/STA304 Paper2/models/candidate_models_top_5.rds")
+
+# Plot Residuals vs Fitted for each candidate
+for (candidate in names(candidate_models)) {
+  # Extract the model
+  model <- candidate_models[[candidate]]
+  
+  # Create the Residuals vs Fitted plot
+  plot(model, which = 1, main = paste("Residuals vs Fitted -", candidate))
+}
+
+```
+
+
+We examine residuals vs. fitted plots to assess the fit of the MLR models. This step ensures that the model assumptions are met and that the MLR models adequately predict the support percentages based on polling data.
+
+# Prediction of Support Over Time {#sec-prediction}
+
+## Model Overview
+
+In this section, we present the predicted support percentages for each candidate using the MLR model. We focus on predictions leading up to November 5th, 2024, the election day. The model incorporates poll score, sample size, and transparency score, as well as the date of the poll, to predict future support trends.
+
+## Predictions
+
+```{r}
+#| echo: false
+# Load the predicted support data
+combined_predictions <- readRDS("~/STA304 Paper2/models/predicted_support_top_5.rds")
+
+# Create the final prediction graph
+ggplot(combined_predictions, aes(x = end_date, y = predicted_pct, color = answer, group = answer)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  labs(title = "Predicted Support Percentage Over Time for Top 5 Candidates", 
+       x = "Date", y = "Predicted Support Percentage (%)") +
+  scale_x_date(limits = c(as.Date("2024-01-01"), as.Date("2024-11-05"))) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))  # Center the title
+
+```
+
+For each candidate, we project their likely support percentage over time, visualizing how their polling support is expected to evolve as the election date approaches. These predictions offer insights into which candidate is likely to gain the most support based on the trends observed in the polling data.
+
+# Conclusion
+
+This paper presents a data-driven prediction of the 2024 U.S. Presidential election outcome. Through simple linear regression (SLR), we verified that sample size does influence support percentages for some candidates. Then, using multiple linear regression (MLR), we predicted the support percentages for the top 5 candidates up to November 5th, 2024. The MLR models show that poll score and transparency score are important factors in predicting support percentages. Future research could explore additional polling factors or include regional breakdowns to further refine the predictions.
+
+# Discussion
+
+## First discussion point {#sec-first-point}
+
+If my paper were 10 pages, then should be be at least 2.5 pages. The discussion is a chance to show off what you know and what you learnt from all this. 
+
+## Second discussion point
+
+Please don't use these as sub-heading labels - change them to be what your point actually is.
+
+## Third discussion point
+
+## Weaknesses and next steps
+
+Weaknesses and next steps should also be included.
+
+\newpage
+
+\appendix
+
+# Appendix {-}
+
+
+# Additional data details
+
+# Model details {#sec-model-details}
+
+## Posterior predictive check
+
+In @fig-ppcheckandposteriorvsprior-1 we implement a posterior predictive check. This shows...
+
+In @fig-ppcheckandposteriorvsprior-2 we compare the posterior with the prior. This shows... 
+
+```{r}
+#| eval: true
+#| echo: false
+#| message: false
+#| warning: false
+#| label: fig-ppcheckandposteriorvsprior
+#| layout-ncol: 2
+#| fig-cap: "Examining how the model fits, and is affected by, the data"
+#| fig-subcap: ["Posterior prediction check", "Comparing the posterior with the prior"]
+
+pp_check(first_model) +
+  theme_classic() +
+  theme(legend.position = "bottom")
+
+posterior_vs_prior(first_model) +
+  theme_minimal() +
+  scale_color_brewer(palette = "Set1") +
+  theme(legend.position = "bottom") +
+  coord_flip()
+```
+
+## Diagnostics
+
+@fig-stanareyouokay-1 is a trace plot. It shows... This suggests...
+
+@fig-stanareyouokay-2 is a Rhat plot. It shows... This suggests...
+
+```{r}
+#| echo: false
+#| eval: true
+#| message: false
+#| warning: false
+#| label: fig-stanareyouokay
+#| fig-cap: "Checking the convergence of the MCMC algorithm"
+#| fig-subcap: ["Trace plot", "Rhat plot"]
+#| layout-ncol: 2
+
+plot(first_model, "trace")
+
+plot(first_model, "rhat")
+```
+
+
+
+\newpage
+
+
+# References
+
+

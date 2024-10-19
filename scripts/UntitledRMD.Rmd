@@ -1,0 +1,84 @@
+```{r}
+#### Preamble ####
+# Purpose: Explore the dataset
+# Author: Ruiyang Wang
+# Date: Oct.18th 2024
+# Contact: ruiyang.wang@mail.utoronto.ca
+# License: None
+# Pre-requisites: None
+# Any other information needed? None
+
+install.packages("corrplot")
+
+# Load necessary libraries
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(corrplot)
+
+# Load your data (replace with your actual file paths)
+df1 <- read_csv("~/STA304 Paper2/data/02-analysis_data/analysis_data_relevant_full.csv")
+df2 <- read_csv("~/STA304 Paper2/data/02-analysis_data/analysis_data_morning_consult.csv")
+
+# Combine the datasets
+df_combined <- bind_rows(df1, df2)
+
+# Check the structure of the data
+str(df_combined)
+
+# Descriptive statistics grouped by "answer"
+descriptive_stats <- df_combined %>%
+  group_by(answer) %>%
+  summarise(
+    avg_pct = mean(pct, na.rm = TRUE),
+    avg_pollscore = mean(pollscore, na.rm = TRUE),
+    avg_transparency_score = mean(transparency_score, na.rm = TRUE)
+  )
+
+# Print the descriptive statistics
+print(descriptive_stats)
+
+# Bar plot for average support percentage by candidate (answer)
+ggplot(df_combined, aes(x = reorder(answer, pct), y = pct)) +
+  stat_summary(fun.y = "mean", geom = "bar", fill = "skyblue") +
+  labs(title = "Average Support Percentage by Candidate (answer)",
+       x = "Candidate", y = "Average Support (%)") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Count the number of polls conducted for each candidate (answer)
+poll_count_per_candidate <- df_combined %>%
+  group_by(answer) %>%
+  summarise(poll_count = n())
+
+# Print the poll count
+print(poll_count_per_candidate)
+
+# Bar plot for the number of polls conducted for each candidate
+ggplot(df_combined, aes(x = reorder(answer, -n()))) +
+  geom_bar(stat = "count", fill = "skyblue") +
+  labs(title = "Number of Polls Conducted by Candidate (answer)",
+       x = "Candidate", y = "Number of Polls") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Compute correlation matrix for key numerical variables
+cor_matrix <- df_combined %>%
+  select(pct, pollscore, sample_size, transparency_score, numeric_grade) %>%
+  cor(use = "complete.obs")
+
+# Print the correlation matrix
+print(cor_matrix)
+
+# Correlation heatmap
+corrplot(cor_matrix, method = "color", type = "lower", tl.col = "black", tl.srt = 45, addCoef.col = "black")
+
+# Convert the end_date to Date format
+df_combined$end_date <- as.Date(df_combined$end_date)
+
+# Plot candidate support over time
+ggplot(df_combined, aes(x = end_date, y = pct, color = answer)) +
+  geom_line() +
+  labs(title = "Trend of Support Percentage Over Time by Candidate",
+       x = "End Date", y = "Support (%)") +
+  theme_minimal()
+```
+
