@@ -1,11 +1,11 @@
 ---
-title: "2024 USA Election Prediction"
+title: "2024 USA Presidential Election Prediction"
 author: 
   - Ruiyang Wang
 thanks: "Code and data are available at: [https://github.com/Ruiyang-Wang/STA304-Paper2.git)."
 date: today
 date-format: long
-abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
+abstract: "This article analyzes the polling data from the 2024 U.S. presidential election to estimate the likely winner and understand the factors that influence candidate support. Using simple and multiple linear regression models, we examined the effect of variables such as sample size, poll scores, and transparency on the percentage of support. The analysis showed that while the effect of sample size was limited, highly transparent polls were associated with an increase in candidate support, highlighting the impact of poll quality on public perception. Based on our model, because of the continued upward trend in support, we expect Donald Trump to be the likely front-runner. The paper also highlights the potential and limitations of statistical modeling in election prediction, enhancing our understanding of how voting methods shape public opinion in high-stakes elections."
 format: pdf
 number-sections: true
 bibliography: references.bib
@@ -27,39 +27,53 @@ library(knitr)
 library(kableExtra)
 library(MASS)
 ```
-
-
 # Introduction
 
-The 2024 U.S. Presidential election is approaching, and understanding the factors that influence polling results is crucial for predicting the election outcome. This paper uses polling data to predict the support percentages for the top 5 candidates leading up to November 5th, 2024. We first explore the relationship between sample size and support percentage using simple linear regression (SLR). We then employ multiple linear regression (MLR) to model the influence of various polling factors and culminate in a prediction graph for each candidate's support. Our goal is to provide an evidence-based prediction of the likely election result.
+The 2024 U.S. presidential election has attracted the world-wide attention, from economic uncertainty to social policy and global affairs. As the election proceeds, polling data has become a key tool for understanding public sentiment and predicting potential outcomes. However, it is challenging to accurately interpret the data due to a variety of factors that can influence poll results. For example, sample size, pollster methodology, and the demographics of respondents. This article aims to provide an analysis of polling data(@US2024) only based on statistical methods.
+
+To construct this analysis, we first explored how the sample size affected the support of the top five candidates in this election - Joe Biden, Kamala Harris, Donald Trump, Robert Kennedy Jr., and Jill Stein. Given that some candidates, notably Trump and Harris, have larger voter bases, it is necessary to determine whether changes in sample size are correlated with fluctuations in candidate support. Using sample sizes for simple linear regression (SLR) and logarithmic transformations to address model assumptions violations, we confirm that while sample sizes do affect support percentages, the bias will not strong when we apply it to the multiple linear regression model.
+
+After the simple regression analysis, we move on to build multiple linear regression (MLR) models for each of top five candidate. Combining multiple predictor variables, these MLR models allow us to predict support percentage over time, and a visual representation of these projections shows trends throughout the election period.
 
 ## Estimand
 
-Our primary estimand is the predicted support percentage for each candidate based on polling data. We aim to quantify how polling factors such as sample size, poll scores, and transparency scores affect the predicted support percentage.
+The estimates in our MLR analysis are regression coefficients for each predictor - poll score, logarithmic conversion sample size, and transparency score. These coefficients represent the estimated impact of each predictor on the percentage of support after the square root conversion, while the other predictors remain constant.
+
+Coefficient for poll score: This estimand quantifies the effect of poll scores on approval ratings, controlling for sample size and transparency. The positive coefficient suggests that high-quality polls (indicated by higher poll scores) are associated with higher support for candidates, possibly due to more accurate methodology.
+
+Coefficient for Log-transformed sample size: This estimand captures the effect of sample size (in its log-converted form) on percentage of support, controlling for poll scores and transparency. The logarithmic transformation accounts for less violations for statistical model assumptions. The positive coefficient indicates that a larger sample size tends to produce higher candidate support, possibly due to reduced sampling error.
+
+Coefficient for transparency score: This estimand represents the effect of transparency onoverall support rating, controlling for poll scores and sample size. A positive coefficient means that polls with higher transparency scores tend to report higher levels of support, suggesting that greater methodological transparency is associated with higher candidate support.
+
+These estimands provide insight into how each predictor independently affects the percentage of support after conversion. By examining these coefficients, we can better understand the role of poll quality, sample size, and transparency in shaping reported levels of voter support, and thus gain a fuller picture of the factors that influence public sentiment represented in poll data.
 
 ## Structure of the Paper
 
-The remainder of this paper is structured as follows: 
-- Section @sec-data describes the dataset and key variables.
-- Section @sec-slr presents the simple linear regression (SLR) model used to explore the effect of sample size on support percentage.
-- Section @sec-mlr presents the multiple linear regression (MLR) model used for predictions.
-- Section @sec-prediction provides the key predictions leading up to the election.
+The remainder of this paper is structured as follows:  
+- @sec-data describes the dataset and key variables.  
+- @sec-slr presents the simple linear regression (SLR) model used to explore the effect of sample size on support percentage.  
+- @sec-mlr presents the multiple linear regression (MLR) model used for predictions.  
+- @sec-prediction provides the key predictions leading up to the election.  
+- @sec-disc presents the discussion on the whole paper  
+- @sec-weak provides the weakness and future step of this study.  
+` @sec-appen provides the appendix that include the discussion for certain pollster and idealized survey design.
+
 
 # Data {#sec-data}
 
 ## Overview
 
-The data used for this analysis includes polling results for the top 5 candidates in the 2024 U.S. Presidential election. Key variables include:
-- **Sample Size**: The number of respondents in each poll.
-- **Support Percentage (pct)**: The percentage of respondents supporting a particular candidate.
-- **Poll Score**: A measure of the reliability of the pollster.
-- **Transparency Score**: An indicator of how transparent the pollster is about their polling methods.
+We use the statistical programming language R [@citeR]to generate analysis. Our data [@US2024] provides a detailed look at voter support trends for the candidates in 2024 US election. By exploring this data, we aim to gain insights into how sample size and polling quality impact reported support percentages.To enhance our approach, we follow principles from Telling Stories with Data [@tellingstories], which emphasizes clear and effective communication of data insights.We employ a variety of visualization techniques and statistical models to ensure that our findings are accessible and well supported. With these approaches, we highlight the nuances of poll data analysis, particularly in terms of sample size effects and model accuracy, ultimately helping to get a clearer picture of voter sentiment as we approach the 2024 election.
 
 ## Measurement
 
-Each polling result is recorded with the above variables, allowing us to investigate the relationship between polling factors and the support percentage of each candidate. This analysis focuses on the top 5 most frequently polled candidates.
+The variables in this dataset are designed to measure specific aspects of public opinion and voting quality, allowing us to accurately analyze voter support trends. The main variable, the pct, represents the support rate of each candidate and serves as an indicator of public opinion at the time of each poll. This measurement assumes that the sample population accurately reflects the broader voting population, and that a higher percentage indicates a candidate is more popular.
 
-## Outcome Variables
+To ensure accuracy, the dataset includes sample_size, which affects the representativeness of the poll. A larger sample size usually results in a more reliable percentage of support, which minimizes the margin of error. We performed a logarithmic transformation of sample_size in our analysis to stabilize the variance and satisfy the assumptions of the regression model.
+
+Research indicates that transparency in survey methodologies significantly enhances the credibility and trustworthiness of poll results(@geopoll2022). Variables related to quality, such as transparency_score and pollscore, give insights into the reliability of each poll. These scores measure the transparency with which each poll makes its methodology public, with higher scores indicating greater reliability. This transparency is important because polls that employ high-quality methodologies are less likely to introduce bias into our analysis.
+
+However, we acknowledge the potential limitations of these measurements. Differences in survey methods, regional bias in sampling, and variability in public opinion affect the validity and reliability of these variables. Despite these challenges, the dataset provides a comprehensive view of trends in public opinion, allowing us to explore sample size effects and candidate support with reasonable confidence.
 
 Our primary outcome variable is **support percentage (pct)**, which represents the percentage of respondents who support each candidate. This variable is modeled as the dependent variable in both the SLR and MLR analyses.
 
@@ -70,22 +84,23 @@ Some of our data is from @US2024
 #| warning: false
 #| message: false
 data <- read_csv("~/STA304 Paper2/data/02-analysis_data/analysis_data_relevant_full.csv")
-tibble(data)
+kable(head(data), caption = "Sample of the Data Table")
 ```
 
-# Simple Linear Regression (SLR): Verification of Sample Size Effect {#sec-slr}
+# Verification of Sample Size Effect {#sec-slr}
 
-## Overview
+## Introduction
 
 In this section, we verify whether sample size has a significant impact on the support percentage of the candidates. Simple linear regression (SLR) is used to examine the relationship between the sample size and the percentage of support for each of the top 5 candidates.
 
 ## Model Overview
 
-In the SLR model, the **dependent variable** is the support percentage (pct), and the **independent variable** is the sample size. A log-transformation is applied to the sample size to account for its wide range across different polls.
+In the SLR model, the **dependent variable** is the support percentage (pct), and the **predictor variable** is the sample size. A log-transformation is applied to the sample size to account for the less violation for statistical model assumptions.
 
-## Model Overview
 ```{r}
 #| echo: false
+#| warning: false
+#| message: false
 # Filter data to include only the top 5 candidates
 top_5_answers <- data %>%
   count(answer, sort = TRUE) %>%
@@ -117,11 +132,12 @@ for (candidate in unique(filtered_data$answer)) {
   print(p)
 }
 ```
-In the SLR model, the **dependent variable** is the support percentage (pct), and the **independent variable** is the sample size. A log-transformation is applied to the sample size to account for its wide range across different polls.
 
 ## Result
 ```{r}
 #| echo: false
+#| warning: false
+#| message: false
 # Initialize a data frame to store R-squared values
 r_squared_comparison <- data.frame(
   candidate = character(),
@@ -153,24 +169,40 @@ ggplot(r_squared_comparison, aes(x = candidate, y = r_squared, fill = candidate)
   theme(plot.title = element_text(hjust = 0.5))  # Center the title
 ```
 
-For each candidate, we analyze whether sample size significantly influences their support percentage. The results will guide us in assessing whether sample size should be further considered in the multiple linear regression (MLR) models.
+The graph shows the R-squared value for the simple linear regression model that examines the relationship between the log-transformed sample size and the percentage of support for the top five candidates. As the chart shows, all of the candidates have low R-squared values, with Biden and Harris having the highest R-squared values, both around 0.04. Low R-squared values across all five candidates suggest that the sample size alone has limited power to explain the percentage of support. This finding suggests that sample size may have less bias when we add it into our further multiple linear regression model.
 
-# Multiple Linear Regression (MLR): Predicting Support Percentages {#sec-mlr}
+# Regression Analysis of Key Predictors {#sec-mlr}
 
-## Overview
-
-After examining the effect of sample size on support percentage through SLR, we now introduce the multiple linear regression (MLR) model. This model incorporates additional variables, such as poll score and transparency score, to predict the support percentage for each candidate.
+## Introduction
+After examining the effect of sample size on support percentage through SLR, we now apply the multiple linear regression (MLR) model. This model incorporates three variables, poll score, sample size and transparency score, to predict the support percentage for each candidate.
 
 ## Model Overview & Residual Analysis
+Those 5 MLR models include:  
+- **Outcome Variable**: Support Percentage (square root transformed)  
+- **Predictor Variables**: Poll Score, Log-transformed Sample Size, and Transparency Score.  
 
-The MLR model includes:
-- **Dependent Variable**: Support Percentage (sqrt-transformed)
-- **Independent Variables**: Poll Score, Log-transformed Sample Size, and Transparency Score.
-
-The residual analysis is used to evaluate the model's fit, helping us assess the quality of the predictions.
-
+These models are designed to evaluate the statistical relationship between outcomes and predictor variables, providing insight into the relative impact of each predictor on different candidate datasets. As shown below, the coefficients for each model reveal their statistical significance, highlighting patterns that may help explain changes in candidate support.
 ```{r}
 #| echo: false
+#| warning: false
+#| message: false
+# Load candidate models from the RDS file
+candidate_models <- readRDS("~/STA304 Paper2/models/candidate_models_top_5.rds")
+
+# Loop through each model and display only the coefficients summary
+for (i in seq_along(candidate_models)) {
+  cat("### Coefficients for Model", i, "\n")  # Print a title for each model
+  print(coef(summary(candidate_models[[i]])))  # Display only the coefficients table
+  cat("\n\n")  # Add spacing between models
+}
+```
+  
+We observe that for each top 5 candidates, pollscore, log_sample_size, and transpanrency_score are all statistically significant to the response variable. Thus, we might proceed on further Residual vs. Fitted graph constructing.
+  
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
 # Load the candidate models
 candidate_models <- readRDS("~/STA304 Paper2/models/candidate_models_top_5.rds")
 
@@ -185,8 +217,13 @@ for (candidate in names(candidate_models)) {
 
 ```
 
+For Trump, Biden and Harris's graph, the residuals are generally centered around zero, and there is no clear pattern, indicating that the model fits well. The distribution of residuals is relatively consistent among the fitted values, indicating that the model satisfies the mean square error hypothesis without any obvious signs of heteroscedasticity. While there are a few standout points, these outliers do not appear to significantly affect the distribution of residuals or the fit of the model.
 
-We examine residuals vs. fitted plots to assess the fit of the MLR models. This step ensures that the model assumptions are met and that the MLR models adequately predict the support percentages based on polling data.
+Kennedy's data present a significant challenge to our model assumptions. Kennedy's original data showed serious violations in multiple assumptions.Among all transoformation tested, logarithmic conversions of sample size and taking the square root of the outcome variable proved to be the most effective in reducing hypothesis violations. However, after these adjustments, the Kennedy model's residuals still show a clear downward trend, suggesting that the linear assumption may be violated because the linear model may not fully capture the relationship between the predictor and the outcome. In addition, there is evidence of heteroscedasticity, with residuals showing larger variances at lower fit values, indicating that the error variance is not constant. In addition, there do exsit 2 main clusters of points. Together, these issues suggest that the Kennedy model may violate the assumptions of linear, constant variance, and uncorrelated errors, and future studies need to be further modified to adequately address these errors.
+
+Stein shows a residual plot with a slight downward trend, which suggests that the model may benefit from different specifications or transformations to improve the fit. The distribution of residuals varies between the fitted values, especially at the low end, which indicates slight heteroscedasticity .Outliers stand out in the plot and can affect the performance of the model. Examining these points further provides insight into their impact on residuals and potential adjustments to the model.
+
+Overall, the MLR model seems to fit Biden, Harris, and Trump. However, it requires an improved or alternative approach to Kennedy and potentially Stein. Kennedy's data requires further data transformations. Future studies may consider more advanced techniques or alternative conversions to better address the observed violations.
 
 # Prediction of Support Over Time {#sec-prediction}
 
@@ -198,6 +235,8 @@ In this section, we present the predicted support percentages for each candidate
 
 ```{r}
 #| echo: false
+#| warning: false
+#| message: false
 # Load the predicted support data
 combined_predictions <- readRDS("~/STA304 Paper2/models/predicted_support_top_5.rds")
 
@@ -217,83 +256,85 @@ For each candidate, we project their likely support percentage over time, visual
 
 # Conclusion
 
-This paper presents a data-driven prediction of the 2024 U.S. Presidential election outcome. Through simple linear regression (SLR), we verified that sample size does influence support percentages for some candidates. Then, using multiple linear regression (MLR), we predicted the support percentages for the top 5 candidates up to November 5th, 2024. The MLR models show that poll score and transparency score are important factors in predicting support percentages. Future research could explore additional polling factors or include regional breakdowns to further refine the predictions.
+In this prediction, we exclude Kennedy and Biden. As the residual analysis(@sec-mlr) shows, Kennedy's data has serious violations on linearity, constant variance, and uncorrelated error. These problems implies that this prediction model did not fit Kennedy, making it difficult to draw reliable conclusions from estimates. Biden, on the other hand, was excluded from the election due to his recent exit, so his support percentage data has nothing to do with the remaining results of the 2024 US election. His leave might lead to a reallocation of his supporters, potentially affecting the dynamics among the other candidates.
 
-# Discussion
+As the focus narrows to Harris, Stein and Trump, Harris' final estimated support is slightly higher than Trump's. However, several factors lead us to estimate Trump is likely the front-runner. While Harris's estimated percentage is slightly higher, Trump's overall trend across the timeline shows a steady upward trend, suggesting that increasing trend is building as the election nears. The continued growth in support suggests that Trump may continue to attract more voters, further solidifying his base.
 
-## First discussion point {#sec-first-point}
+Moreover, Trump's strengthening trend positions him well to benefit from the reallocation of Biden's supporters, who may now seek to align themselves with a new candidate after Biden's exit.
 
-If my paper were 10 pages, then should be be at least 2.5 pages. The discussion is a chance to show off what you know and what you learnt from all this. 
+Harris' supports do show only a slight upward trend, but lacking the same dynamic growth and timeline length as Trump's. Their final score gap is also likely to be within the range of natural fluctuations, making Trump's momentum a more reliable indicator of his potential advantage.
 
-## Second discussion point
+# Discussion {#sec-disc}
+This paper uses statistical modeling to study the dynamics of poll support for the top 5 candidates in the 2024 U.S. president election. By using simple linear regression (SLR) and multiple linear regression (MLR) models, we aim to understand the relationship between vote quality measures such as vote score, sample size, and transparency score and voter support percentage. Our findings first suggest that sample size has a limited impact on support, so that we might proceed to further analysis. High-quality polls (as measured by transparency and poll scores) tend to show higher levels of support for candidates. This trend underscores the importance of methodological rigor, as transparent and well-executed polls are more likely to be perceived as reliable, and might influence respondents' preferences.
 
-Please don't use these as sub-heading labels - change them to be what your point actually is.
+In addition, the MLR model captured important trends in favor of Joe Biden, Kamala Harris, and Donald Trump, showing power in predicting their rankings as Election Day approached. For example, Biden and Harris benefited from higher support percentage in transparent polls, suggesting that polling methods influence public trust. This relationship between vote quality and voter sentiment highlights the potential for statistical models to provide valuable insights into election predictions.
 
-## Third discussion point
+While the model provides a solid basis for predicting election outcomes based on statistical indicators, it also exposes the limitations of purely statistical methods. Real-world factors such as party loyalty, voting patterns of specific demographics, and recent changes in candidate rankings remain unresolved in our analysis. Future improvements could involve integrating qualitative data and simulations to account for the reallocation of voters after a candidate drops out, creating a more comprehensive and adaptable predictive model.
 
-## Weaknesses and next steps
+# Weaknesses and next steps {#sec-weak}
 
-Weaknesses and next steps should also be included.
+A key limitation of this paper is Biden's unexpected exit from the election, which challenges the accuracy of our model's predictions. As a well-known Democratic candidate, Biden's exit could mean that his supporters will reallocate their votes, and many will turn to Harris because she belongs to the same party. This redistribution of support skews the data, potentially inflating Harris's expected support in a way that models assuming a static voter base cannot accurately capture.
+
+Another major challenge was encountered in applying the model to Kennedy's supporting data, which revealed substantial problems. Despite various transformations, including logarithm and square root adjustments, the residual of Kennedy's support showed a clear downward trend, suggesting a violation of the model's linear assumptions. The presence of heteroscedasticity further suggests that Kennedy's base of support was more variable and unpredictable than other candidates. 
+
+Overall, this paper only relies on purely statistical methods, which do not fully account for real-world factors. The model operates under the assumption that all polls are fair and representative; However, changes in poll methodology, question wording, and sample demographics can introduce biases that affect the accuracy of support predictions. In addition, our analysis does not account for external influences, such as major election campaigns, media coverage, or changes in public sentiment, which are critical to shaping voter behavior. 
+
+To address these weaknesses, future research should consider alternative models to better capture complex voter dynamics. Advanced statistical techniques can also help control for bias and demographic factors in a particular poll. Moreover, a hybrid model that combines statistical analysis with real-world data, might provide a more complete picture of what drives voter behavior in elections.
 
 \newpage
 
 \appendix
 
-# Appendix {-}
+# Appendix {#sec-appen}
 
+# Pollster Discussion
+We choose Morning Consult as our focus. Morning Consult is a pollster known for its consistent approach to gathering public opinion data, especially during election periods. This discussion delves into Morning Consult's methodology, including sampling, recruitment, and strengths and weaknesses, based on the information available in the dataset.
 
-# Additional data details
+## Population, Frame, and Sample
+Morning Consult's polls are designed to be representative of the general voting population, with a particular focus on reaching a broad range of likely voters(@morning_consult). Sample sizes in the data range widely, ranging from around 490 people to more than 1,000. This variability reflects an attempt to balance feasibility and accuracy, as larger sample sizes generally produce more reliable results, although they are more resource-intensive.
 
-# Model details {#sec-model-details}
+## Sample Recruitment
+Although the dataset does not explicitly detail the recruitment methods used, Morning Consult employs online panels to gather data, digitally reaching a large and diverse group of respondents. This approach enables effective data collection, but can introduce biases related to Internet accessibility and self-selection, as individuals who choose to participate in online surveys may not be fully representative of the wider population.
 
-## Posterior predictive check
+## Sampling Approach and Trade-Offs
+Morning Consult primarily uses a quota sampling method, ensuring that various demographics within the population are represented in its sample based on population distribution. This method helps balance the sample to reflect key demographics such as age, gender, race, and political affiliation, but it does not provide the randomness of probability sampling, which can affect the generality of the results. In addition, quota sampling may not fully capture less common or rapidly changing views among voters.
 
-In @fig-ppcheckandposteriorvsprior-1 we implement a posterior predictive check. This shows...
+## Handling of Non-Response
+The dataset does not specify Morning Consult's approach to non-responses; However, due to the immediate participation of participants, online surveys generally see fewer non-responses than telephone or mail surveys. That said, if certain demographic groups are less likely to complete the survey, Morning Consult may still face challenges from non-response bias, which could skethe results despite balancing demographics with quotas.
 
-In @fig-ppcheckandposteriorvsprior-2 we compare the posterior with the prior. This shows... 
+## Questionnaire Designs
+Morning Consult's questionnaire design is generally consistent, focusing on standard polling indicators such as candidate support and party affiliation. The structured format helps keep the polls clear and comparable. However, there are limitations: online questionnaires sometimes lack the interactive depth provided by interviewee led surveys, and respondents may misinterpret questions without an opportunity for clarification. In addition, using sorted choice redistribution, a feature in some of Morning Consult's polls, allows for a more nuanced view of candidate preferences in multi-candidate scenarios, although this can complicate data interpretation for those unfamiliar with the system.
 
-```{r}
-#| eval: true
-#| echo: false
-#| message: false
-#| warning: false
-#| label: fig-ppcheckandposteriorvsprior
-#| layout-ncol: 2
-#| fig-cap: "Examining how the model fits, and is affected by, the data"
-#| fig-subcap: ["Posterior prediction check", "Comparing the posterior with the prior"]
+## Overall Strengths & Weaknesses
+Morning Consult's online methodology provides quick and cost-effective access to a broad sample, enabling frequent updates to poll data. Its use of quota sampling also helps ensure a balanced population, making polls more reflective of the general population. In addition, Morning Consult scored 3 on transparency in this dataset, indicating a moderate openness to methodology that is valuable in accurately interpreting the results.
 
-pp_check(first_model) +
-  theme_classic() +
-  theme(legend.position = "bottom")
+However, reliance on online samples can introduce biases associated with Internet access and self-selection. The lack of probability sampling reduces the generality of survey results, non-response processing remains unclear, and data quality can be compromised if certain groups systematically avoid participation. The format of the questionnaire, while consistent, can also limit engagement because online surveys may not promote the level of understanding of respondents as much as face-to-face or telephone surveys.
 
-posterior_vs_prior(first_model) +
-  theme_minimal() +
-  scale_color_brewer(palette = "Set1") +
-  theme(legend.position = "bottom") +
-  coord_flip()
-```
+\newpage
 
-## Diagnostics
+# Idealized Methodology and Survey Design
+With a budget of $100,000 dedicated to predicting the U.S. presidential election, we will implement a comprehensive survey methodology that prioritizes representation, data integrity, and forecast accuracy. The method includes deep sampling method, respondent recruitment strategy, data validation protocol and poll aggregation technique. In addition, we will utilize digital survey platforms, such as Google Forms, to collect feedback in an effective and inclusive manner.
 
-@fig-stanareyouokay-1 is a trace plot. It shows... This suggests...
+## Sampling Approach
+The ideal sampling method for this survey is stratified random sampling. This approach ensures that we capture key demographic variables, such as age, gender, race, geographic location, and political affiliation, in proportion to their presence in the U.S. electorate. By dividing the population into these classes and sampling within each group, we enhance the representativeness of the sample. This approach will allow us to create a data set that accurately reflects the diversity of the voting population, reduce bias, and make the findings more broadly applicable to a wider range of voters.
 
-@fig-stanareyouokay-2 is a Rhat plot. It shows... This suggests...
+## Respondent Recruitment
+In order to recruit diverse respondents, we will use a hybrid model that combines online and telephone recruitment. Online recruitment will target a broad audience through social media platforms, news sites and email outreach, using targeted advertising to reach specific populations that have been underrepresented in previous surveys. For people who are unlikely to respond online, such as the elderly or those with limited Internet access, we conduct telephone interviews. This approach ensures that we reach a wide range of voters and minimizes potential non-response bias.
 
-```{r}
-#| echo: false
-#| eval: true
-#| message: false
-#| warning: false
-#| label: fig-stanareyouokay
-#| fig-cap: "Checking the convergence of the MCMC algorithm"
-#| fig-subcap: ["Trace plot", "Rhat plot"]
-#| layout-ncol: 2
+## Data Validation
+Data validation is critical to maintaining the accuracy and reliability of survey results. Our data verification protocol will involve cross-referencing demographic information with external databases to verify the authenticity of responses and flag duplicates or inconsistencies. In addition, we will incorporate response checks, such as attention-checking questions, into the survey to identify and filter out unattended or automated responses. To further improve the quality of the data, we conduct pilot tests and adjust the survey design based on the weaknesses identified.
 
-plot(first_model, "trace")
+## Poll Aggregation
+Given the dynamic nature of election forecasting, poll aggregation will be an integral part of our methodology. The aggregation of results from multiple rounds of polls conducted in the weeks leading up to the election allows us to track changes in public sentiment over time. Each poll cycle provides the latest insights, allowing us to observe trends and momentum changes among the candidates. We will apply a weighted average to the aggregated results, assigning more weight to recent polls and responses from demographic groups that have historically had high voter turnout. This approach helps eliminate variability in the data and provides more stable and reliable predictions.
 
-plot(first_model, "rhat")
-```
+## Survey Implementation
+Using Google Forms as a survey platform provides a cost-effective and easily accessible way to manage surveys with large audiences. The platform's integration with Google Sheets and other analytics tools also facilitates effective data collection, organization, and analysis. As described in the Recruitment section, survey links will be shared across multiple channels to maximize reach. In addition, we will set up regular survey reminders to encourage participation and improve response rates. A link to a sample Google Forms survey will be included in the appendix, along with a full copy of the survey, for greater transparency.
 
+## Questionnaire Design
+Research indicates that concise surveys with varied question formats can enhance respondent engagement and data (@qualitypewresearch2022). As a result, the survey will consist of several sections aimed at understanding voter intentions and demographics. Key questions include candidates' preferences, likelihood of voting, and views on key issues affecting their choices. Demographic questions will cover age, gender, race, income level, and political affiliation, allowing us to break down the data and get a nuanced understanding of voter groups. The survey will be concise to reduce dropout rates and incorporate multiple choice and Likert scale questions to keep respondents engaged and facilitate statistical analysis.
+
+## Budget Allocation
+A budget of $100,000 will be allocated to all aspects of the investigation process. About 40 percent will be spent on recruitment and rewards for respondents, while higher grants will go to hard-to-reach groups. Another 30% will be used for data processing and validation to ensure the highest data quality. The remaining budget will be used to support the vote aggregation process, ongoing analysis and reporting of results.
 
 
 \newpage

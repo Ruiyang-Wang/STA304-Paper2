@@ -7,21 +7,50 @@
 # Pre-requisites: None
 # Any other information needed? None
 
+install.packages("knitr")
 install.packages("MASS")
+library(ggplot2)
+library(dplyr)
+library(MASS)
+library(knitr)
 
-# SLR for sample size vs. pct for trump and harris
+# Does sample size affect the support percentage?
+# Load the dataset
+data <- read_csv("~/STA304 Paper2/data/02-analysis_data/analysis_data_relevant_full.csv")
+
+# Filter data to include only the top 5 candidates
+top_5_answers <- data %>%
+  count(answer, sort = TRUE) %>%
+  top_n(5, n) %>%
+  pull(answer)
+
+# Filter data to include only the top 5 candidates
+filtered_data <- data %>%
+  filter(answer %in% top_5_answers)
+
+# Calculate the average sample size for each candidate
+average_sample_size <- filtered_data %>%
+  group_by(answer) %>%
+  summarise(Average_Sample_Size = mean(sample_size, na.rm = TRUE))
+
+# Use knitr::kable() to create a nicely formatted table
+average_sample_size %>%
+  kable(col.names = c("Candidate", "Average Sample Size"), 
+        caption = "Average Sample Size for Top 5 Candidates")
+
+
+
+
+
+# SLR for sample size vs. pct
 # Load necessary libraries
 library(ggplot2)
 library(dplyr)
 library(MASS)
 
 # Load the dataset
-data <- read_csv("~/STA304 Paper2/data/02-analysis_data/analysis_data_relevant_full.csv")
-
-# Filter data to include only Trump and Harris
-filter_data <- data %>%
-  filter(answer %in% c("Trump", "Harris"))
-
+filtered_data <- data %>%
+  filter(answer %in% top_5_answers)
 # Perform Log transformation for each candidate
 for (candidate in unique(filtered_data$answer)) {
   # Filter data for the current candidate
@@ -217,3 +246,25 @@ ggplot(combined_predictions, aes(x = end_date, y = predicted_pct, color = answer
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))  # Center the title
 
+
+#save as RDS
+
+save_path <- "~/STA304 Paper2/models"
+
+# 1. Save the filtered data (top 5 candidates) as RDS
+saveRDS(filtered_data, file = file.path(save_path, "filtered_data_top_5.rds"))
+
+# 2. Save the average sample size results as RDS
+saveRDS(average_sample_size, file = file.path(save_path, "average_sample_size_top_5.rds"))
+
+# 3. Save the candidate models (Multiple Linear Regression) as RDS
+saveRDS(candidate_models, file = file.path(save_path, "candidate_models_top_5.rds"))
+
+# 4. Save the R-squared values comparison as RDS
+saveRDS(r_squared_comparison, file = file.path(save_path, "r_squared_comparison_top_5.rds"))
+
+# 5. Save the combined predictions (support percentage over time) as RDS
+saveRDS(combined_predictions, file = file.path(save_path, "predicted_support_top_5.rds"))
+
+# 6. (Optional) Save the final prediction plot as an image
+ggsave(filename = file.path(save_path, "predicted_support_over_time_top_5_candidates.png"), width = 10, height = 6)
