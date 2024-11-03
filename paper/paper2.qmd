@@ -285,9 +285,7 @@ To address these weaknesses, future research should consider alternative models 
 
 \appendix
 
-# Appendix {#sec-appen}
-
-# Pollster Discussion
+# Appendix - Pollster Discussion{#sec-appen}
 We choose Morning Consult as our focus. Morning Consult is a pollster known for its consistent approach to gathering public opinion data, especially during election periods. This discussion delves into Morning Consult's methodology, including sampling, recruitment, and strengths and weaknesses, based on the information available in the dataset.
 
 ## Population, Frame, and Sample
@@ -312,7 +310,7 @@ However, reliance on online samples can introduce biases associated with Interne
 
 \newpage
 
-# Idealized Methodology and Survey Design
+# Appendix - Idealized Methodology and Survey Design
 With a budget of $100,000 dedicated to predicting the U.S. presidential election, we will implement a comprehensive survey methodology that prioritizes representation, data integrity, and forecast accuracy. The method includes deep sampling method, respondent recruitment strategy, data validation protocol and poll aggregation technique. In addition, we will utilize digital survey platforms, such as Google Forms, to collect feedback in an effective and inclusive manner.
 
 ## Sampling Approach
@@ -331,7 +329,7 @@ Given the dynamic nature of election forecasting, poll aggregation will be an in
 Using Google Forms as a survey platform provides a cost-effective and easily accessible way to manage surveys with large audiences. The platform's integration with Google Sheets and other analytics tools also facilitates effective data collection, organization, and analysis. As described in the Recruitment section, survey links will be shared across multiple channels to maximize reach. In addition, we will set up regular survey reminders to encourage participation and improve response rates. A link to a sample Google Forms survey will be included in the appendix, along with a full copy of the survey, for greater transparency.
 
 ## Questionnaire Design
-Research indicates that concise surveys with varied question formats can enhance respondent engagement and data (@qualitypewresearch2022). As a result, the survey will consist of several sections aimed at understanding voter intentions and demographics. Key questions include candidates' preferences, likelihood of voting, and views on key issues affecting their choices. Demographic questions will cover age, gender, race, income level, and political affiliation, allowing us to break down the data and get a nuanced understanding of voter groups. The survey will be concise to reduce dropout rates and incorporate multiple choice and Likert scale questions to keep respondents engaged and facilitate statistical analysis.
+Research indicates that concise surveys with varied question formats can enhance respondent engagement and data (@pewresearch2022). As a result, the survey will consist of several sections aimed at understanding voter intentions and demographics. Key questions include candidates' preferences, likelihood of voting, and views on key issues affecting their choices. Demographic questions will cover age, gender, race, income level, and political affiliation, allowing us to break down the data and get a nuanced understanding of voter groups. The survey will be concise to reduce dropout rates and incorporate multiple choice and Likert scale questions to keep respondents engaged and facilitate statistical analysis.
 
 ## Budget Allocation
 A budget of $100,000 will be allocated to all aspects of the investigation process. About 40 percent will be spent on recruitment and rewards for respondents, while higher grants will go to hard-to-reach groups. Another 30% will be used for data processing and validation to ensure the highest data quality. The remaining budget will be used to support the vote aggregation process, ongoing analysis and reporting of results.
